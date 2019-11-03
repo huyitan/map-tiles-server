@@ -1,0 +1,32 @@
+{
+  "options": {
+    "paths": {
+      "root": "",
+      "fonts": "./fonts",
+      "sprites": "./sprite",
+      "styles": "./styles"
+    }
+  },
+  "styles": {
+    "basic": {
+      "style": "custom_map_style.json",
+      "tilejson": {
+        "name": "CustomMap",
+        "description": "A special thanks to OpenMapTiles.org & OpenStreetMap.org projects",
+        "bounds": [100.810547,7.667441,110.346680,24.166802],
+        "attribution": "<a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>"
+      }
+    }
+  },
+  "data": {
+    "vietnam": {
+      "mbtiles": "vietnam.mbtiles",
+      "tilejson": {
+        "name": "CustomMap",
+        "description": "A special thanks to OpenMapTiles.org & OpenStreetMap.org projects",
+        "bounds": [100.810547,7.667441,110.346680,24.166802],
+        "attribution": "<a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>"
+      }
+    }
+  }
+}
