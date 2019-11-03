@@ -40,12 +40,12 @@ TileServer GL’s documentation: https://tileserver.readthedocs.io/en/latest/ind
 		- Run Docker in detached mode
 			docker run -d --rm -it -v $(pwd):/data -p 10001:80 klokantech/tileserver-gl
 
-	Check server run on **localhost:10001**
+	Check server run on localhost:10001
 
 #### Note:
 
 	Running behind a proxy or a load-balancer
-	If you need to run TileServer GL behind a proxy, make sure the proxy sends X-Forwarded-* headers to the server (most importantly **X-Forwarded-Host** and **X-Forwarded-Proto**) to ensures the URLs generated inside TileJSON etc. are using the desired domain and protocol.
+	If you need to run TileServer GL behind a proxy, make sure the proxy sends X-Forwarded-* headers to the server (most importantly X-Forwarded-Host and X-Forwarded-Proto) to ensures the URLs generated inside TileJSON etc. are using the desired domain and protocol.
 
 	`proxy_set_header HOST $host`
 
@@ -105,7 +105,7 @@ Convert data OSM to mbtiles (Refs: https://jimmyrocks.io/writings/Loading-Custom
 
 Docs: https://tileserver.readthedocs.io/en/latest/config.html#referencing-local-mbtiles-from-style
 
-	- Create **config.json** file:
+	- Create config.json file:
 		{
 			"options": {
 				"paths": {
@@ -140,7 +140,7 @@ Docs: https://tileserver.readthedocs.io/en/latest/config.html#referencing-local-
 		}
 
 
-	- Create folder "styles" contain **{style}.json** file
+	- Create folder "styles" contain {style}.json file
 		e.g. custom_map_style.json
 
 	- Create folder "fonts" contain fonts which the {style}.json needs
