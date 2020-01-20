@@ -5,7 +5,9 @@ TileServer GL’s documentation: https://tileserver.readthedocs.io/en/latest/ind
 
 ## Setup TileServer on Ubuntu  
 
-#### Step 1: Install Docker
+#### Step 1: Clone this repository
+
+#### Step 2: Install Docker
 	https://docs.docker.com/install/linux/docker-ce/ubuntu/
 
 	sudo apt update
@@ -27,11 +29,10 @@ TileServer GL’s documentation: https://tileserver.readthedocs.io/en/latest/ind
 
 	sudo usermod --append --groups docker $USER
 
-#### Step 2: Upload map data (scp path/to/file/tomove user@host:path/to/file/topaste)
+#### Step 3: Copy your map tiles data (mbtiles) file into the repository
+	note: file name must to be modify on file `config.json`
 
-	eg. scp vietnam-latest.mbtiles  [user]@[host]:[directory]
-
-#### Step 3: Start the TileServer GL docker image
+#### Step 4: Start the TileServer GL docker image
 
 	Redirect to folder which contain map data then run command below
 
@@ -41,6 +42,15 @@ TileServer GL’s documentation: https://tileserver.readthedocs.io/en/latest/ind
 			docker run -d --rm -it -v $(pwd):/data -p 10001:80 klokantech/tileserver-gl
 
 	Check server run on localhost:10001
+
+
+#### Useful command
+	- Upload map data to server command (scp path/to/file/tomove user@host:path/to/file/topaste)
+		eg. scp vietnam.mbtiles  [user]@[host]:/root/[directory]
+	- Use screen to detach current process: Ctrl-a + d
+	- List all screens: screen -ls
+	- Reattach screen: screen -r {screen-id}
+
 
 #### Note:
 
@@ -68,87 +78,134 @@ TileServer GL’s documentation: https://tileserver.readthedocs.io/en/latest/ind
 		docker stop CONTAINER_ID
 
 
-********************************************************************************
-## Prepare data  
-
-Convert data OSM to mbtiles (Refs: https://jimmyrocks.io/writings/Loading-Custom-OpenStreetMap-Data-into-OpenMapTiles/)
-
-	- Clone the OpenMapTiles repo to your computer:
-		git clone https://github.com/openmaptiles/openmaptiles.git
-	- Change to the new openmaptiles directory
-		cd openmaptiles
-	- Run the make command in the Docker (This is far easier and cleaning that installing it on your own machine)
-		docker run -v $(pwd):/tileset openmaptiles/openmaptiles-tools make
-	- Copy your PBF File into the data directory (Your command will probably be different)
-		cp ../vietnam.osm.pbf ./data
-	- Update the .env file (Update the following lines, you will want to use your own BBOX, which is the same as the one obtained from bboxfinder - http://bboxfinder.com/)
-		BBOX=100.810547,7.667441,110.346680,24.166802
-		MIN_ZOOM=0
-		MAX_ZOOM=14
-	- Create the file /data/docker-compose-config.yml with content
-		version: "2"
-		services:
-		  generate-vectortiles:
-		    environment:
-		      BBOX: "100.810547,7.667441,110.346680,24.166802"
-		      OSM_AREA_NAME: "vietnam"
-		      MIN_ZOOM: "0"
-		      MAX_ZOOM: "14"
-	- Update attribution
-		open file openmaptiles.yaml then update attribution field
-	- Execute
-		./quickstart.sh vietnam
-
 
 ********************************************************************************
-## Config
+
+## Prepare osm data  
+### Use BBBike to extract openstreetmap data(osm.pbf)
+	https://extract.bbbike.org/
+
+### Extract small area from larger area
+- Getting OSM data (e.g. asia-latest.osm.pbf)
+	wget http://download.geofabrik.de/asia-latest.osm.pbf
+- Install osmctools
+		sudo apt-get update
+		sudo apt-get install osmctools
+- Use osmconvert(a part of osmctools) to chop it down to the area you want
+	```bash
+	osmconvert asia-latest.osm.pbf -b=101.881714,7.406048,119.707031,23.557496 --complex-ways -o=vn.osm.pbf
+	```
+
+## Prepare mbtiles data to use in TileServer  
+
+### Quickstart extracts from OpenMapTiles tools
+
+* Clone the OpenMapTiles repo to your computer:
+	git clone https://github.com/openmaptiles/openmaptiles.git
+* Run command quickstart to generate mbtiles file from "region" base on geofabrik(http://download.geofabrik.de/index.html)
+	`./quickstart.sh {region}`
+* `.mbtiles` file will be generated in `data/` folder
+
+### Convert your own osm.pbf file to mbtiles file
+Check system requirements before you start!
+`Useful note from OpenMapTiles: https://github.com/openmaptiles/openmaptiles/blob/master/QUICKSTART.md`
+
+* Clone the OpenMapTiles repo to your computer:
+	git clone https://github.com/openmaptiles/openmaptiles.git
+
+* Change to the new openmaptiles directory
+	`cd openmaptiles`
+* Create "data" folder
+* Copy your PBF File into the data directory (Your command will probably be different)
+	`cp ../vietnam.osm.pbf ./data`
+* Update the .env file
+	Update the following lines, you will want to use your own BBOX, which is the same as the one obtained from bboxfinder - http://bboxfinder.com/
+
+	```base
+	BBOX=100.810547,7.667441,110.346680,24.166802
+	MIN_ZOOM=0
+	MAX_ZOOM=14
+	```
+* Create the file /data/docker-compose-config.yml with content
+	```base
+  version: "2"
+  services:
+    generate-vectortiles:
+      environment:
+        BBOX: "100.810547,7.667441,110.346680,24.166802"
+        OSM_AREA_NAME: "vietnam"
+        MIN_ZOOM: "0"
+        MAX_ZOOM: "14"
+	```
+* Update attribution
+	open file openmaptiles.yaml then update attribution field
+* Execute
+	`./quickstart.sh vietnam`
+* `.mbtiles` file will be generated in `data/` folder
+
+#### If you have problems with the quickstart
+* check the ./quickstart.log
+* doublecheck the system requirements
+	`Make sure you have enough hardware capacity`
+* check the current issues: https://github.com/openmaptiles/openmaptiles/issues
+
+
+
+********************************************************************************
+
+## Config for TileServer
 
 Docs: https://tileserver.readthedocs.io/en/latest/config.html#referencing-local-mbtiles-from-style
 
-	- Create config.json file:
-		{
-			"options": {
-				"paths": {
-					"root": "",
-					"fonts": "./fonts",
-					"sprites": "./sprite",
-					"styles": "./styles"
+* Create config.json file:
+	```base
+	{
+		"options": {
+			"paths": {
+				"root": "",
+				"fonts": "./fonts",
+				"sprites": "./sprite",
+				"styles": "./styles"
+			}
+		},
+		"styles": {
+			"basic": {
+				"style": "custom_map_style.json",
+				"tilejson": {
+					"name": "CustomMap",
+					"description": "A special thanks to OpenMapTiles.org & OpenStreetMap.org projects",
+					"bounds": [100.810547,7.667441,110.346680,24.166802],
+					"attribution": "<a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>"
 				}
-			},
-			"styles": {
-				"basic": {
-					"style": "custom_map_style.json",
-					"tilejson": {
-						"name": "CustomMap",
-						"description": "A special thanks to OpenMapTiles.org & OpenStreetMap.org projects",
-						"bounds": [100.810547,7.667441,110.346680,24.166802],
-						"attribution": "<a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>"
-					}
-				}
-			},
-			"data": {
-				"vietnam": {
-					"mbtiles": "vietnam.mbtiles",
-					"tilejson": {
-						"name": "CustomMap",
-						"description": "A special thanks to OpenMapTiles.org & OpenStreetMap.org projects",
-						"bounds": [100.810547,7.667441,110.346680,24.166802],
-						"attribution": "<a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>"
-					}
+			}
+		},
+		"data": {
+			"vietnam": {
+				"mbtiles": "vietnam.mbtiles",
+				"tilejson": {
+					"name": "CustomMap",
+					"description": "A special thanks to OpenMapTiles.org & OpenStreetMap.org projects",
+					"bounds": [100.810547,7.667441,110.346680,24.166802],
+					"attribution": "<a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>"
 				}
 			}
 		}
+	}
+	```
 
+	note: replace `bounds` to your own map bbox
 
-	- Create folder "styles" contain {style}.json file
-		e.g. custom_map_style.json
+* Create folder `styles` contain {style}.json file
+	e.g. `custom_map_style.json`
 
-	- Create folder "fonts" contain fonts which the {style}.json needs
+* Create folder `fonts` contain fonts which the `{style}.json` needs
 
-	- Create folder "sprite" contain following files
-		sprite.json
-		sprite.png
-		sprite@2x.json
-		sprite@2x.png
+* Create folder `sprite` contain following files
+	```base
+	sprite.json
+	sprite.png
+	sprite@2x.json
+	sprite@2x.png
+	```
 
-	- Re-run TileServer GL docker image
+* Re-run TileServer GL docker image
